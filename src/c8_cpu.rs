@@ -67,8 +67,8 @@ pub struct C8Cpu {
     display: [u64; DISPLAY_HEIGHT], // 64x32 display
 
     pub draw_flag: bool,
-    pub waiting_for_key: bool,
-    pub waiting_for_key_register: u8,
+    waiting_for_key: bool,
+    waiting_for_key_register: u8,
 }
 
 impl C8Cpu {
@@ -125,8 +125,18 @@ impl C8Cpu {
         self.draw_flag = true;
     }
 
+    pub fn set_key(&mut self, key: u8) {
+        if self.waiting_for_key {
+            self.v[self.waiting_for_key_register as usize] = key;
+            self.waiting_for_key = false;
+        }
+    }
+
     #[allow(dead_code)]
     pub fn single_cycle(&mut self) {
+        if self.waiting_for_key {
+            return;
+        }
         let opcode = self.fetch();
         println!("opcode: {:04x}", opcode);
         let opcode_ms_nibble = get_nibble(opcode, 3);

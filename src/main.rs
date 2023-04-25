@@ -14,7 +14,7 @@ const SCALE: u32 = 10;
 
 fn main() {
 
-    let rom = fs::read("ch8/ibm_logo.ch8").expect("Unable to read file");
+    let rom = fs::read("ch8/pong.ch8").expect("Unable to read file");
     println!("rom size: {}b", rom.len());
     
     let mut cpu = C8Cpu::new();
@@ -40,6 +40,54 @@ fn main() {
                 Event::Quit {..} |
                 Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
                     break 'running
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num0), .. } => {
+                    cpu.set_key(0x0);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num1), .. } => {
+                    cpu.set_key(0x1);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num2), .. } => {
+                    cpu.set_key(0x2);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num3), .. } => {
+                    cpu.set_key(0x3);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num4), .. } => {
+                    cpu.set_key(0x4);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num5), .. } => {
+                    cpu.set_key(0x5);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num6), .. } => {
+                    cpu.set_key(0x6);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num7), .. } => {
+                    cpu.set_key(0x7);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num8), .. } => {
+                    cpu.set_key(0x8);
+                },
+                Event::KeyDown { keycode: Some(Keycode::Num9), .. } => {
+                    cpu.set_key(0x9);
+                },
+                Event::KeyDown { keycode: Some(Keycode::A), .. } => {
+                    cpu.set_key(0xA);
+                },
+                Event::KeyDown { keycode: Some(Keycode::B), .. } => {
+                    cpu.set_key(0xB);
+                },
+                Event::KeyDown { keycode: Some(Keycode::C), .. } => {
+                    cpu.set_key(0xC);
+                },
+                Event::KeyDown { keycode: Some(Keycode::D), .. } => {
+                    cpu.set_key(0xD);
+                },
+                Event::KeyDown { keycode: Some(Keycode::E), .. } => {
+                    cpu.set_key(0xE);
+                },
+                Event::KeyDown { keycode: Some(Keycode::F), .. } => {
+                    cpu.set_key(0xF);
                 },
                 _ => {}
             }
