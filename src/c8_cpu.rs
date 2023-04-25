@@ -113,6 +113,7 @@ impl C8Cpu {
         for i in 0..DISPLAY_HEIGHT {
             self.display[i] = 0;
         }
+        self.draw_flag = true;
     }
 
     #[allow(dead_code)]
@@ -129,10 +130,12 @@ impl C8Cpu {
         match opcode_ms_nibble {
             0x0 => match opcode {
                 0x00e0 => {
+                    // CLS
                     self.cls();
                     self.inc_pc();
                 }
                 0x00ee => {
+                    // RET
                     self.sp -= 1;
                     self.pc = self.stack[self.sp as usize];
                 }
@@ -141,20 +144,24 @@ impl C8Cpu {
                 }
             },
             0x1 => {
+                // JP addr
                 self.pc = addr;
             }
             0x2 => {
+                // CALL addr
                 self.stack[self.sp as usize] = self.pc;
                 self.sp += 1;
                 self.pc = addr;
             }
             0x3 => {
+                // SE Vx, byte
                 if self.v[x] == kk {
                     self.inc_pc();
                 }
                 self.inc_pc();
             }
             0x4 => {
+                // SNE Vx, byte
                 if self.v[x] != kk {
                     self.inc_pc();
                 }
@@ -163,6 +170,7 @@ impl C8Cpu {
             0x5 => {
                 match n {
                     0 => {
+                        // SE Vx, Vy
                         if self.v[x] == y as u8 {
                             self.inc_pc();
                         }
@@ -174,33 +182,41 @@ impl C8Cpu {
                 self.inc_pc();
             }
             0x6 => {
+                // LD Vx, byte
                 self.v[x] = kk;
                 self.pc += INSTRUCTION_SIZE;
             }
             0x7 => {
+                // ADD Vx, byte
                 self.v[x] = self.v[x].wrapping_add(kk);
                 self.inc_pc();
             }
             0x8 => {
                 match n {
                     0 => {
+                        // LD Vx, Vy
                         self.v[x] = self.v[y];
                     }
                     1 => {
+                        // OR Vx, Vy
                         self.v[x] |= self.v[y];
                     }
                     2 => {
+                        // AND Vx, Vy
                         self.v[x] &= self.v[y];
                     }
                     3 => {
+                        // XOR Vx, Vy
                         self.v[x] ^= self.v[y];
                     }
                     4 => {
+                        // ADD Vx, Vy
                         let (result, overflow) = self.v[x].overflowing_add(self.v[y]);
                         self.v[x] = result;
                         self.v[0xf] = overflow as u8;
                     }
                     5 => {
+                        // SUB Vx, Vy
                         self.v[0xf] = 0;
                         if self.v[x] > self.v[y] {
                             self.v[0xf] = 1;
@@ -208,10 +224,12 @@ impl C8Cpu {
                         self.v[x] = self.v[x].wrapping_sub(self.v[y]);
                     }
                     6 => {
+                        // SHR Vx {, Vy}
                         self.v[0xf] = self.v[x] & 0x1;
                         self.v[x] >>= 1; // divide by 2
                     }
                     7 => {
+                        // SUBN Vx, Vy
                         self.v[0xf] = 0;
                         if self.v[y] > self.v[x] {
                             self.v[0xf] = 1;
@@ -219,6 +237,7 @@ impl C8Cpu {
                         self.v[x] = self.v[y].wrapping_sub(self.v[x]);
                     }
                     0xe => {
+                        // SHL Vx {, Vy}
                         self.v[0xf] = self.v[x] >> 7;
                         self.v[x] <<= 1; // multiply by 2
                     }
@@ -231,6 +250,7 @@ impl C8Cpu {
             0x9 => {
                 match n {
                     0 => {
+                        // SNE Vx, Vy
                         if self.v[x] != self.v[y] {
                             self.inc_pc();
                         }
@@ -242,17 +262,21 @@ impl C8Cpu {
                 self.inc_pc();
             }
             0xa => {
+                // LD I, addr
                 self.i = addr;
                 self.inc_pc();
             }
             0xb => {
+                // JP V0, addr
                 self.pc = addr + self.v[0] as u16;
             }
             0xc => {
+                // RND Vx, byte
                 self.v[x] = rand::thread_rng().gen::<u8>() & kk;
                 self.inc_pc();
             }
             0xd => {
+                // DRW Vx, Vy, nibble
                 let _x = self.v[x] as usize;
                 let _y = self.v[y] as usize;
 
@@ -277,11 +301,13 @@ impl C8Cpu {
                 let key = self.v[x];
                 match kk {
                     0x9e => {
+                        // SKP Vx
                         if self.keypad & (0x1 << key) != 0 {
                             self.inc_pc();
                         }
                     }
                     0xa1 => {
+                        // SKNP Vx
                         if self.keypad & (0x1 << key) == 0 {
                             self.inc_pc();
                         }
@@ -295,26 +321,33 @@ impl C8Cpu {
             0xf => {
                 match kk {
                     0x07 => {
+                        // LD Vx, DT
                         self.v[x] = self.dt;
                     }
                     0x0a => {
+                        // LD Vx, K
                         println!("Waiting for key press...");
                         // TODO: wait for key press
                     }
                     0x15 => {
+                        // LD DT, Vx
                         self.dt = self.v[x];
                     }
                     0x18 => {
+                        // LD ST, Vx
                         self.st = self.v[x];
                     }
                     0x1e => {
+                        // ADD I, Vx
                         self.i = self.i.wrapping_add(self.v[x] as u16);
                     }
                     0x29 => {
+                        // LD F, Vx
                         println!("TODO: set i to location of sprite for digit Vx");
                         // TODO: set i to location of sprite for digit Vx
                     }
                     0x33 => {
+                        // LD B, Vx
                         let mut value = self.v[x];
                         for i in 0..3 {
                             self.memory[(self.i + i) as usize] = value % 10;
@@ -322,11 +355,13 @@ impl C8Cpu {
                         }
                     }
                     0x55 => {
+                        // LD [I], Vx
                         for i in 0..=x {
                             self.memory[(self.i + i as u16) as usize] = self.v[i];
                         }
                     }
                     0x65 => {
+                        // LD Vx, [I]
                         for i in 0..=x {
                             self.v[i] = self.memory[(self.i + i as u16) as usize];
                         }
