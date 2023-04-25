@@ -14,7 +14,7 @@ const SCALE: u32 = 10;
 
 fn main() {
 
-    let rom = fs::read("ch8/ibm_logo.ch8").expect("Unable to read file");
+    let rom = fs::read("ch8/tictactoe.ch8").expect("Unable to read file");
     println!("rom size: {}b", rom.len());
     
     let mut cpu = C8Cpu::new();
@@ -44,7 +44,6 @@ fn main() {
                 _ => {}
             }
         }
-        // The rest of the game loop goes here...
         if cpu.draw_flag {
             cpu.render(&mut canvas, SCALE as usize)
         }
@@ -52,6 +51,4 @@ fn main() {
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
-    // println!("{}", cpu);
-    // cpu.run()
 }

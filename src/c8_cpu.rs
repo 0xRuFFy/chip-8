@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::{thread, time, fmt};
+use std::fmt;
 
 use sdl2::{
     render::Canvas,
@@ -384,32 +384,6 @@ impl C8Cpu {
             _ => {
                 invalid_opcode!(opcode);
             }
-        }
-    }
-
-    #[allow(dead_code)]
-    pub fn run(&mut self) {
-        loop {
-            self.single_cycle();
-            if self.draw_flag {
-                self.draw();
-                self.draw_flag = false;
-            }
-            thread::sleep(time::Duration::from_millis(16));
-        }
-    }
-
-    #[allow(dead_code)]
-    fn draw(&self) {
-        for i in 0..DISPLAY_HEIGHT {
-            for j in 0..DISPLAY_WIDTH {
-                if self.display[i] & (0x1 << j) != 0 {
-                    print!("#");
-                } else {
-                    print!(" ");
-                }
-            }
-            println!();
         }
     }
 
