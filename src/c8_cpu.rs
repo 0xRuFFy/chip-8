@@ -1,6 +1,11 @@
 use rand::Rng;
 use std::{thread, time, fmt};
 
+use sdl2::{
+    render::Canvas,
+    video::Window, pixels::Color, rect::Rect
+};
+
 macro_rules! invalid_opcode {
     ($opcode:expr) => {
         panic!("Invalid opcode: 0x{:x}", $opcode);
@@ -61,7 +66,9 @@ pub struct C8Cpu {
     keypad: u16,                    // 16-bit keypad
     display: [u64; DISPLAY_HEIGHT], // 64x32 display
 
-    draw_flag: bool,
+    pub draw_flag: bool,
+    pub waiting_for_key: bool,
+    pub waiting_for_key_register: u8,
 }
 
 impl C8Cpu {
@@ -78,6 +85,8 @@ impl C8Cpu {
             keypad: 0,
             display: [0; DISPLAY_HEIGHT],
             draw_flag: false,
+            waiting_for_key: false,
+            waiting_for_key_register: 0,
         };
         cpu.load_fontset();
 
@@ -117,9 +126,9 @@ impl C8Cpu {
     }
 
     #[allow(dead_code)]
-    fn single_cycle(&mut self) {
+    pub fn single_cycle(&mut self) {
         let opcode = self.fetch();
-        // println!("opcode: {:04x}", opcode);
+        println!("opcode: {:04x}", opcode);
         let opcode_ms_nibble = get_nibble(opcode, 3);
         let x = get_nibble(opcode, 2) as usize;
         let y = get_nibble(opcode, 1) as usize;
@@ -326,8 +335,8 @@ impl C8Cpu {
                     }
                     0x0a => {
                         // LD Vx, K
-                        println!("Waiting for key press...");
-                        // TODO: wait for key press
+                        self.waiting_for_key = true;
+                        self.waiting_for_key_register = x as u8;
                     }
                     0x15 => {
                         // LD DT, Vx
@@ -343,8 +352,8 @@ impl C8Cpu {
                     }
                     0x29 => {
                         // LD F, Vx
-                        println!("TODO: set i to location of sprite for digit Vx");
-                        // TODO: set i to location of sprite for digit Vx
+                        let digit = self.v[x] & 0xf;
+                        self.i = (FONTSET_START as u16) + (digit as u16 * 5);
                     }
                     0x33 => {
                         // LD B, Vx
@@ -378,6 +387,7 @@ impl C8Cpu {
         }
     }
 
+    #[allow(dead_code)]
     pub fn run(&mut self) {
         loop {
             self.single_cycle();
@@ -389,6 +399,7 @@ impl C8Cpu {
         }
     }
 
+    #[allow(dead_code)]
     fn draw(&self) {
         for i in 0..DISPLAY_HEIGHT {
             for j in 0..DISPLAY_WIDTH {
@@ -400,6 +411,26 @@ impl C8Cpu {
             }
             println!();
         }
+    }
+
+    pub fn render(&self, canvas: &mut Canvas<Window>, scale: usize) {
+        canvas.set_draw_color(Color::RGB(255, 255, 255));
+        for i in 0..DISPLAY_HEIGHT {
+            for j in 0..DISPLAY_WIDTH {
+                if self.display[i] & (0x1 << j) != 0 {
+                    canvas
+                        .fill_rect(Rect::new(
+                            (j * scale) as i32,
+                            (i * scale) as i32,
+                            scale as u32,
+                            scale as u32,
+                        ))
+                        .unwrap();
+                }
+            }
+        }
+
+        canvas.present();
     }
 }
 
